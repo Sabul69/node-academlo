@@ -280,3 +280,30 @@ exports.purchaseOrder = catchAsync(async (req, res, next) => {
 
 // Create a controller a function that gets all the user's orders
 // The response must include all products that purchased
+exports.getUserOrders = catchAsync(async(req, res, next)=>{
+
+	const { currentUser } = req;
+
+	const orders = await Order.findOne({
+		where: { userId: currentUser.id },
+		include: [
+			{
+				model: ProductInOrder,
+				include: [
+					{
+						model: Product,
+						attributes: {
+							exclude: ['id', 'userId', 'price', 'quantity', 'status'],
+						},
+					},
+				],
+			},
+		],
+	});
+
+	res.status(200).json({
+		status: 'success',
+		data: { orders },
+	});
+
+})

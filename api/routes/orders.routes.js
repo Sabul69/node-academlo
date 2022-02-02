@@ -39,5 +39,6 @@ router.patch(
 router.post('buy', purchaseOrder)
 
 // Get user's orders
+router.get('/get-orders',getUserOrders)
 
 module.exports = { ordersRouter: router };
