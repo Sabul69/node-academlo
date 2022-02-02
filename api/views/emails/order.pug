@@ -1,0 +1,23 @@
+extends base
+
+block emailContent
+
+  p Hi #{username}
+  p Your purchase order is confirmed.
+  p Order: 
+  
+  table.body(role='presentation' cellspacing='0' cellpadding='0' border='0')
+    tbody  
+        tr 
+            th Product
+            th Quantity
+            th Price
+        each product in products 
+        tr  
+            th #{product.product.name}
+            th #{product.quantity}
+            th #{product.price}
+
+  p Total Price: #{totalPrice}
+  
+  

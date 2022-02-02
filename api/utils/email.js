@@ -61,6 +61,10 @@ class Email {
 	async sendWelcome(username, email) {
 		await this.send('welcome', 'New account!', { username, email });
 	}
+	
+	async sendOrder(username, email,  products, totalPrice) {
+		await this.send('order', 'Confirmation Order', { username, email });
+	}
 }
 
 module.exports = { Email };

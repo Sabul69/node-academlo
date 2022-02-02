@@ -9,6 +9,7 @@ const { catchAsync } = require('../utils/catchAsync');
 const { filterObj } = require('../utils/filterObj');
 const { AppError } = require('../utils/appError');
 const { formatUserCart } = require('../utils/queryFormat');
+const { Email } = require('../utils/email');
 
 exports.getUserCart = catchAsync(async (req, res, next) => {
 	const { currentUser } = req;
@@ -226,19 +227,18 @@ exports.purchaseOrder = catchAsync(async (req, res, next) => {
 		totalPrice:cart.totalPrice,
 		date,
 	});
+	const emailProducts= [cart.productInCart]
 	// [Promise]
 		// Loop through the products array, for each product
 		// Set productInCart status to 'purchased', search for cartId and productId
 		// Look for the Product (productId), substract and update the requested qty from the product's qty
-	 const promises = cart.productInCart.map(async (product) => {
-	 	const cartProduct = await product.findOne({
-			where: { id: product.id, status: 'onGoing' },
-			include: [
-				{
-					model: Product,
-				}]})
+	 const promises = cart.productInCart.map(async (productCart) => {
+	 	const cartProduct = await productCart.findOne({
+			where: { id: productCart.id, status: 'onGoing' },
+		})
 
-		const productStock = await product.findOne({
+	
+		const productStock = await Product.findOne({
 			attributes: { exclude: ['userId', 'status'] },
 			where: { userId:cartProduct.Product.id },
 			})
@@ -248,7 +248,7 @@ exports.purchaseOrder = catchAsync(async (req, res, next) => {
 			await cartProduct.update({ status: 'purchased' });
 			await productStock.update({ quantity: newQuantity  });
 
-			await Order.create({
+			await ProductInOrder.create({
 				orderId: order.id ,
 				productId:productStock.id,
 				price:cartProduct.price,
@@ -258,6 +258,12 @@ exports.purchaseOrder = catchAsync(async (req, res, next) => {
 	 //Resolve all promises
 	 await Promise.all(promises)
 
+
+
+	// 2nd part:
+	// Send email to the user that purchased the order
+	// The email must contain the total price and the list of products that it purchased
+	await new Email(currentUser.email).sendOrder(currentUser.name, currentUser.email, emailProducts, order.totalPrice);
 
 
 
@@ -270,3 +276,7 @@ exports.purchaseOrder = catchAsync(async (req, res, next) => {
 		);
 	}
 });
+
+
+// Create a controller a function that gets all the user's orders
+// The response must include all products that purchased
